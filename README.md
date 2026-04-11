@@ -99,6 +99,9 @@ This project is aligned with real-world applications in:
 Aerospace inspection
 Industrial quality control
 Surface defect detection systems
-👨‍💻 Author
 
+👨‍💻 Author
 Oussama Sghir
+
+License
+MIT

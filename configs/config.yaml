@@ -1,0 +1,37 @@
+model:
+  name: resnet50
+  num_classes: 6
+  freeze_backbone: true
+
+training:
+  epochs: 30
+  batch_size: 32
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-5
+  scheduler: cosine
+  early_stopping_patience: 7
+  label_smoothing: 0.1
+
+data:
+  raw_dir: data/raw
+  img_dir: data/processed/images
+  train_csv: data/splits/train.csv
+  val_csv: data/splits/val.csv
+  test_csv: data/splits/test.csv
+  num_workers: 4
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+paths:
+  checkpoint_dir: checkpoints
+  reports_dir: reports
+  mlflow_uri: sqlite:///mlflow.db
+
+class_names:
+  - crazing
+  - inclusion
+  - patches
+  - pitted_surface
+  - rolled-in_scale
+  - scratches

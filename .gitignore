@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+.venv_new
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.eggs/
+.python-version
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Data and model artifacts
+data/raw/
+data/processed/
+checkpoints/
+reports/
+mlflow.db
+model.onnx
+model.onnx.data
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*~

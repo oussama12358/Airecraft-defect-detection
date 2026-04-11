@@ -4,8 +4,8 @@ import sys
 import torch
 import cv2
 import argparse
-from torchvision import transforms
 from PIL import Image
+from torchvision import transforms
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT_DIR not in sys.path:
@@ -35,7 +35,7 @@ OUTPUT_DIR = args.output_dir
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # =========================
-# CLASS NAMES (NEU-DET 6 classes)
+# CLASS NAMES (NEU-DET)
 # =========================
 CLASS_NAMES = [
     "crazing",
@@ -47,46 +47,43 @@ CLASS_NAMES = [
 ]
 
 # =========================
-# BUILD MODEL FROM CHECKPOINT NAME
-# =========================
-model_name = os.path.basename(MODEL_PATH).lower()
-
-if "baseline_cnn" in model_name:
-    model = BaselineCNN(num_classes=6)
-elif "resnet50" in model_name:
-    model = build_resnet50(num_classes=6, freeze_backbone=False)
-elif "efficientnet_b3" in model_name:
-    model = build_efficientnet_b3(num_classes=6, freeze_backbone=False)
-else:
-    raise ValueError(
-        "Unknown checkpoint name. Use a checkpoint filename containing "
-        "baseline_cnn, resnet50, or efficientnet_b3."
-    )
-
-# =========================
-# LOAD MODEL
-# =========================
-checkpoint = torch.load(MODEL_PATH, map_location="cpu")
-if isinstance(checkpoint, dict) and all(
-    k in checkpoint for k in ["model_state_dict", "state_dict"]
-):
-    # Try common checkpoint containers
-    checkpoint = checkpoint.get("model_state_dict", checkpoint.get("state_dict"))
-
-if isinstance(checkpoint, dict):
-    model.load_state_dict(checkpoint)
-else:
-    model = checkpoint
-
-model.eval()
-
-# =========================
 # TRANSFORM
 # =========================
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
 ])
+
+# =========================
+# BUILD MODEL FROM CHECKPOINT NAME
+# =========================
+def build_model(checkpoint_path):
+    model_name = os.path.basename(checkpoint_path).lower()
+
+    if "baseline_cnn" in model_name:
+        model = BaselineCNN(num_classes=6)
+    elif "resnet50" in model_name:
+        model = build_resnet50(num_classes=6, freeze_backbone=False)
+    elif "efficientnet_b3" in model_name:
+        model = build_efficientnet_b3(num_classes=6, freeze_backbone=False)
+    else:
+        raise ValueError(
+            "Unknown checkpoint name. Use checkpoint filename containing "
+            "baseline_cnn, resnet50, or efficientnet_b3."
+        )
+
+    state_dict = torch.load(checkpoint_path, map_location="cpu")
+    if isinstance(state_dict, dict) and "state_dict" in state_dict:
+        state_dict = state_dict["state_dict"]
+
+    model.load_state_dict(state_dict)
+    model.eval()
+    return model
+
+# =========================
+# LOAD MODEL
+# =========================
+model = build_model(MODEL_PATH)
 
 # =========================
 # PREDICT FUNCTION
@@ -103,14 +100,13 @@ def predict(image_path):
     return pred.item(), conf.item()
 
 # =========================
-# RUN
+# BUILD IMAGE LIST
 # =========================
 image_paths = []
 if os.path.isdir(TEST_DIR):
     for img_name in sorted(os.listdir(TEST_DIR)):
-        if not img_name.lower().endswith((".jpg", ".png", ".jpeg")):
-            continue
-        image_paths.append(os.path.join(TEST_DIR, img_name))
+        if img_name.lower().endswith((".jpg", ".png", ".jpeg")):
+            image_paths.append(os.path.join(TEST_DIR, img_name))
 elif os.path.isfile(SPLIT_CSV):
     with open(SPLIT_CSV, newline="") as csvfile:
         reader = csv.DictReader(csvfile)
@@ -127,6 +123,9 @@ else:
 if not image_paths:
     raise RuntimeError("No test images found for prediction.")
 
+# =========================
+# RUN ON TEST SET
+# =========================
 for path in image_paths:
     if not os.path.isfile(path):
         print(f"Skipping missing file: {path}")
@@ -137,13 +136,19 @@ for path in image_paths:
     img = cv2.imread(path)
     img = cv2.resize(img, (500, 500))
 
-    filename = os.path.basename(path)
     label = f"{CLASS_NAMES[pred]} ({conf:.2f})"
+    filename = os.path.basename(path)
 
-    cv2.putText(img, label, (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8,
-                (0, 255, 0), 2)
+    cv2.putText(
+        img,
+        label,
+        (10, 30),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (0, 255, 0),
+        2
+    )
 
     cv2.imwrite(os.path.join(OUTPUT_DIR, f"pred_{filename}"), img)
 
-print("✅ Predictions saved.")
+print("✅ Predictions completed successfully!")

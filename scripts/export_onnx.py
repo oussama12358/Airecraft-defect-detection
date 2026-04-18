@@ -1,5 +1,10 @@
-import torch, argparse
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+import torch, argparse
 from src.models.efficientnet_b3 import build_efficientnet_b3
 from src.models.resnet50     import build_resnet50
 

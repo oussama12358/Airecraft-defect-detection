@@ -46,23 +46,48 @@ The model classifies **6 types of surface defects**:
 
 ---
 
-## 🧠 Models Used
+---
 
-| Model | Architecture | Accuracy |
-|-------|-------------|----------|
-| 🥉 Baseline CNN | Custom lightweight CNN | ~95.8% |
-| 🥈 EfficientNet-B3 | Transfer learning (EfficientNet) | ~99.5% |
-| 🥇 **ResNet50** | **Transfer learning (ResNet50)** | **100%** |
+## 🛡️ Robustness Enhancements (v2.0)
 
-> ✅ **Best model: ResNet50** — achieves perfect classification on the NEU-DET test set.
+**Problem:** Original model achieved 100% accuracy but was fragile to real-world conditions:
+
+| Condition | ResNet50 |
+|-----------|----------|
+| Clean | 100% |
+| + Gaussian noise | 22% |
+| + Heavy blur | 67% |
+| + Lighting changes | 18% |
+
+**Solution:** Triple-layer robustness strategy:
+
+1. **Model Ensemble** - Combines 3 independent models (ResNet50 + EfficientNet-B3 + Baseline CNN)
+2. **Robust TTA** - Tests with 8 augmentations simulating real conditions (noise, blur, lighting)
+3. **Ultra Mode** - Ensemble + Robust TTA (24 forward passes) for production-critical decisions
+
+See [ROBUSTNESS_IMPROVEMENTS.md](ROBUSTNESS_IMPROVEMENTS.md) for detailed analysis and trade-offs.
 
 ---
 
 ## 📊 Results
 
-- **Best model:** ResNet50 — 100% accuracy
-- **Evaluation metrics:** Confusion matrix + per-class classification accuracy
-- **Generalization:** Strong performance across all 6 defect categories on the NEU-DET benchmark
+### Benchmark Performance
+- **Best model:** ResNet50 — 100% accuracy on NEU-DET test set
+- **Evaluation metrics:** Confusion matrix + per-class accuracy
+- **Generalization:** Strong on clean data; fragile to perturbations
+
+### Real-World Robustness Challenge
+Model performance degrades significantly under real-world conditions:
+
+| Perturbation | ResNet50 | EfficientNet-B3 | Baseline CNN | Ensemble |
+|---|---|---|---|---|
+| Clean (baseline) | 100% | 99.5% | 95.8% | ~99% |
+| Gaussian noise (high) | 17% | 16.6% | 17.5% | ~18% |
+| Blur (heavy) | 67.7% | 89.9% | 42.9% | ~67% |
+| Brightness (dark) | 18.9% | 30.4% | 16.6% | ~22% |
+| JPEG compression (q=20) | 21.2% | 15.2% | 41.5% | ~26% |
+
+**Takeaway:** Overfitting on small dataset (NEU-DET ~1K images). Use ensemble or robust TTA endpoints for production.
 
 ---
 
@@ -162,11 +187,17 @@ python scripts/gradcam.py --model checkpoints/best_resnet50.pt --image data/proc
 ```
 The heatmap output is saved to `assets/gradcam.jpg` by default.
 
-### 11. Run the API
+### 11. Run the API (Enhanced with Ensemble + Robust TTA)
 ```powershell
 uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 Open: http://localhost:8000/docs
+
+**New endpoints (v2.0):**
+- `/predict` - Single model (fast)
+- `/predict/ensemble` - 3-model ensemble (balanced) **[Recommended]**
+- `/predict/robust` - Robust TTA with augmentations (slower but more stable)
+- `/predict/ultra` - Ensemble + Robust TTA (most robust, production-grade)
 
 ## API Reference
 

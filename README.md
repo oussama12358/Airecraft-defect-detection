@@ -50,6 +50,8 @@ The model classifies **6 types of surface defects**:
 
 ## 🎓 Advanced Techniques
 
+See [ADVANCED_ML_IMPROVEMENTS.md](ADVANCED_ML_IMPROVEMENTS.md) for the latest advanced ML update: augmentation visualization, data balance checks, annotation quality checks, EMA, LoRA, and RF-DETER.
+
 ### 1. Data Analysis & Augmentation Visualization
 Verify your data is clean and augmentations are realistic:
 
@@ -178,28 +180,96 @@ Model performance degrades significantly under real-world conditions:
 ```
 aircraft-defect-detection/
 │
-├── checkpoints/                  # Saved model weights
+├── api/                         # FastAPI application
+│   ├── __init__.py
+│   ├── main.py                 # API entrypoint with endpoints
+│   ├── schemas.py              # Pydantic models for requests/responses
+│   ├── inference.py            # Inference logic for predictions
+│   └── assets/                 # Generated predictions and heatmaps
+│
+├── assets/                      # Project assets
+│   └── results/                # Generated results directory
+│
+├── checkpoints/                 # Saved model weights
 │   ├── best_resnet50.pt
 │   ├── best_efficientnet_b3.pt
-│   └── best_baseline_cnn.pt
+│   ├── best_baseline_cnn.pt
+│   ├── best_model.pt
+│   └── model.onnx
 │
-├── scripts/
-│   ├── download_data.py     # Download NEU-DET dataset
-│   ├── prepare_splits.py    # Create train/val/test CSV splits
-│   ├── export_onnx.py       # Export checkpoint to ONNX
-│   ├── generate_predictions.py  # Batch prediction images
-│   └── gradcam.py           # Generate Grad-CAM heatmap for one image
-├── src/
-│   ├── datasets/            # Dataset and transform utilities
-│   ├── evaluation/          # Metrics and reporting code
-│   ├── explainability/      # GradCAM helper code
-│   ├── models/              # Model definitions
-│   └── training/            # Trainer and scheduler
-├── static/                  # Static web assets
-├── train.py                 # Model training entrypoint
-├── evaluate.py              # Evaluation entrypoint
-├── requirements.txt         # Python dependencies
-└── mlflow.db                # MLflow tracking database
+├── configs/                     # Configuration files
+│   └── config.yaml             # Main configuration file
+│
+├── data/                        # Dataset directory
+│   ├── raw/                    # Raw dataset (NEU-DET)
+│   │   └── NEU-DET/
+│   │       ├── train/
+│   │       │   ├── annotations/
+│   │       │   └── images/
+│   │       └── validation/
+│   │           ├── annotations/
+│   │           └── images/
+│   ├── processed/              # Processed images (if applicable)
+│   │   └── images/
+│   └── splits/                 # Train/val/test splits
+│       ├── train.csv
+│       ├── val.csv
+│       └── test.csv
+│
+├── reports/                     # Generated reports and visualizations
+│   ├── baseline_cnn_report.json
+│   ├── efficientnet_b3_report.json
+│   ├── resnet50_report.json
+│   ├── confusion_matrix_*.png
+│   ├── robustness_comparison.csv
+│   ├── robustness_comparison.png
+│   └── augmentations_*.png
+│
+├── scripts/                     # Utility scripts
+│   ├── download_data.py        # Download NEU-DET dataset
+│   ├── prepare_splits.py       # Create train/val/test CSV splits
+│   ├── export_onnx.py          # Export checkpoint to ONNX
+│   ├── generate_predictions.py # Batch predictions on images
+│   ├── gradcam.py              # Generate Grad-CAM heatmaps
+│   ├── analyze_data.py         # Data analysis and augmentation visualization
+│   └── robustness_eval.py      # Robustness evaluation under perturbations
+│
+├── src/                         # Source code
+│   ├── datasets/
+│   │   ├── neu_dataset.py      # NEU-DET dataset loader
+│   │   ├── transforms.py       # Data augmentation transforms
+│   │   ├── data_analyzer.py    # Data analysis utilities
+│   │   └── sampler.py          # Custom samplers
+│   ├── evaluation/
+│   │   ├── metrics.py          # Evaluation metrics
+│   │   ├── report.py           # Report generation
+│   │   ├── ensemble.py         # Ensemble methods
+│   │   ├── tta.py              # Test-Time Augmentation
+│   │   └── robustness.py       # Robustness evaluation functions
+│   ├── explainability/
+│   │   └── gradcam.py          # Grad-CAM implementation
+│   ├── models/
+│   │   ├── baseline_cnn.py     # Baseline CNN model
+│   │   ├── resnet50.py         # ResNet50 model
+│   │   └── efficientnet_b3.py  # EfficientNet-B3 model
+│   └── training/
+│       ├── trainer.py          # Training loop
+│       ├── scheduler.py        # Learning rate schedulers
+│       ├── ema.py              # Exponential Moving Average
+│       ├── lora.py             # Low-Rank Adaptation
+│       └── rf_deter.py         # Random Feature Distillation Enhanced Training
+│
+├── static/                      # Static web assets
+│   └── favicon.ico
+│
+├── train.py                     # Model training entrypoint
+├── evaluate.py                  # Evaluation entrypoint
+├── README.md                    # Project documentation
+├── ADVANCED_ML_IMPROVEMENTS.md  # Advanced ML update notes
+├── ROBUSTNESS_IMPROVEMENTS.md   # Robustness analysis and improvements
+├── requirements.txt             # Python dependencies
+├── .gitignore                   # Git ignore rules
+└── mlflow.db                    # MLflow tracking database
 ```
 
 ## Quickstart (Windows Native)

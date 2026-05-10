@@ -1,0 +1,11 @@
+{
+  "run_name": "resnet50_clean_v2",
+  "best_epoch": 30,
+  "best_val_acc": 0.9953703703703703,
+  "best_train_acc": 0.9930486593843099,
+  "best_acc_gap": -0.002321710986060488,
+  "last_epoch": 30,
+  "last_train_acc": 0.9930486593843099,
+  "last_val_acc": 0.9953703703703703,
+  "last_acc_gap": -0.002321710986060488
+}

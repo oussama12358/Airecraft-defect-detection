@@ -1,0 +1,8 @@
+fold,run_name,accuracy,test_csv
+0,resnet50_fold_0,0.9895833333333334,data\splits\kfold\fold_0\test.csv
+1,resnet50_fold_1,0.9965277777777778,data\splits\kfold\fold_1\test.csv
+2,resnet50_fold_2,0.9791666666666666,data\splits\kfold\fold_2\test.csv
+3,resnet50_fold_3,0.9965277777777778,data\splits\kfold\fold_3\test.csv
+4,resnet50_fold_4,0.9791666666666666,data\splits\kfold\fold_4\test.csv
+mean,,0.9881944444444445,
+std,,0.007795119555779068,

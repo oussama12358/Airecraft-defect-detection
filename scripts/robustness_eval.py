@@ -42,6 +42,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["single", "compare"],
                         default="single", help="single model or compare all")
+    parser.add_argument("--split", choices=["val", "test"], default="test",
+                        help="Clean split used as the base for in-memory robustness probes")
     parser.add_argument("--checkpoint",      type=str, default=None,
                         help="Path to .pt checkpoint (for single mode)")
     parser.add_argument("--model",           type=str, default="resnet50",
@@ -49,6 +51,8 @@ def main():
     parser.add_argument("--resnet_ckpt",     type=str, default=None)
     parser.add_argument("--efficientnet_ckpt", type=str, default=None)
     parser.add_argument("--baseline_ckpt",   type=str, default=None)
+    parser.add_argument("--run_name", type=str, default=None,
+                        help="Artifact prefix in reports/ (default: robustness_<split>)")
     args = parser.parse_args()
 
     if args.mode == "single" and args.checkpoint is None:
@@ -57,19 +61,28 @@ def main():
     cfg    = OmegaConf.to_container(OmegaConf.load("configs/config.yaml"), resolve=True)
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    test_ds = NEUDefectDataset(
-        cfg["data"]["test_csv"],
-        cfg["data"]["img_dir"],
-        transform=get_transforms("val"),
+    split_csv = cfg["data"][f"{args.split}_csv"]
+    run_name = args.run_name or f"robustness_{args.split}"
+
+    print(
+        f"[Robustness] Base split: {args.split} ({split_csv}). "
+        "Stored images are not modified; perturbations are applied in memory only."
     )
-    loader = DataLoader(test_ds, batch_size=32, shuffle=False,
+
+    eval_ds = NEUDefectDataset(
+        split_csv,
+        cfg["data"]["img_dir"],
+        transform=get_transforms(args.split),
+    )
+    loader = DataLoader(eval_ds, batch_size=32, shuffle=False,
                         num_workers=cfg["data"]["num_workers"])
 
     if args.mode == "single":
         model = load_model(args.model, args.checkpoint, cfg)
         model.to(device)
         run_robustness_evaluation(model, loader, device,
-                                  cfg["paths"]["reports_dir"])
+                                  cfg["paths"]["reports_dir"],
+                                  run_name=run_name)
 
     else:
         # Compare all 3 models
@@ -89,7 +102,8 @@ def main():
                                                  args.baseline_ckpt, cfg).to(device)
 
         compare_models_robustness(models, loader, device,
-                                  cfg["paths"]["reports_dir"])
+                                  cfg["paths"]["reports_dir"],
+                                  run_name=run_name)
 
 
 if __name__ == "__main__":

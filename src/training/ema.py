@@ -151,6 +151,6 @@ if __name__ == "__main__":
         model[0].weight.data += torch.randn_like(model[0].weight) * 0.01
         ema.update()
     
-    print(f"✅ EMA initialized with decay=0.999")
-    print(f"✅ Shadow parameters registered: {len(ema.shadow)}")
-    print(f"✅ EMA can be used with context manager: 'with ema:'")
+    print("EMA initialized with decay=0.999")
+    print(f"Shadow parameters registered: {len(ema.shadow)}")
+    print("EMA can be used with context manager: 'with ema:'")

@@ -1,5 +1,5 @@
 model:
-  name: baseline_cnn
+  name: resnet50
   num_classes: 6
   freeze_backbone: true
 
@@ -11,6 +11,8 @@ training:
   scheduler: cosine
   early_stopping_patience: 7
   label_smoothing: 0.1
+  use_ema: true
+  ema_decay: 0.999
   use_lora: true
   lora_rank: 4
   lora_alpha: 32

@@ -24,8 +24,20 @@ def evaluate_model(model, loader, device: str, reports_dir: str = "reports", mod
         all_labels.extend(labels.numpy())
 
     # ── Classification report ─────────────────────────────────────────────────
+    report = classification_report(
+        all_labels,
+        all_preds,
+        target_names=CLASS_NAMES,
+        output_dict=True,
+        zero_division=0,
+    )
     print("\n" + "="*60)
-    print(classification_report(all_labels, all_preds, target_names=CLASS_NAMES))
+    print(classification_report(
+        all_labels,
+        all_preds,
+        target_names=CLASS_NAMES,
+        zero_division=0,
+    ))
 
     # ── Confusion matrix ──────────────────────────────────────────────────────
     cm = confusion_matrix(all_labels, all_preds)
@@ -43,6 +55,10 @@ def evaluate_model(model, loader, device: str, reports_dir: str = "reports", mod
     cm_path = f"{reports_dir}/confusion_matrix_{model_name}.png"
     plt.savefig(cm_path, dpi=150)
     plt.close()
-    print(f"[Metrics] Confusion matrix saved → {cm_path}")
+    print(f"[Metrics] Confusion matrix saved -> {cm_path}")
 
-    return cm
+    return {
+        "accuracy": float(np.mean(np.array(all_preds) == np.array(all_labels))),
+        "confusion_matrix": cm.tolist(),
+        "classification_report": report,
+    }

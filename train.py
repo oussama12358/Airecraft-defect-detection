@@ -1,3 +1,5 @@
+import argparse
+
 import torch
 from torch.utils.data import DataLoader
 from omegaconf import OmegaConf
@@ -13,10 +15,44 @@ from src.training.scheduler    import build_optimizer, build_scheduler
 from src.training.lora         import apply_lora
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Train a defect classifier")
+    parser.add_argument("--config", default="configs/config.yaml")
+    parser.add_argument("--model", choices=["baseline_cnn", "resnet50", "efficientnet_b3"])
+    parser.add_argument("--train_csv", type=str, default=None)
+    parser.add_argument("--val_csv", type=str, default=None)
+    parser.add_argument("--run_name", type=str, default=None,
+                        help="Checkpoint/report prefix, useful for K-fold runs")
+    parser.add_argument("--epochs", type=int, default=None)
+    parser.add_argument("--use_ema", action="store_true",
+                        help="Enable EMA validation/checkpoint weights for this run")
+    parser.add_argument("--ema_decay", type=float, default=None)
+    return parser.parse_args()
+
+
 def main():
-    cfg    = OmegaConf.to_container(OmegaConf.load("configs/config.yaml"), resolve=True)
+    args   = parse_args()
+    cfg    = OmegaConf.to_container(OmegaConf.load(args.config), resolve=True)
+
+    if args.model:
+        cfg["model"]["name"] = args.model
+    if args.train_csv:
+        cfg["data"]["train_csv"] = args.train_csv
+    if args.val_csv:
+        cfg["data"]["val_csv"] = args.val_csv
+    if args.run_name:
+        cfg["training"]["run_name"] = args.run_name
+    if args.epochs:
+        cfg["training"]["epochs"] = args.epochs
+    if args.use_ema:
+        cfg["training"]["use_ema"] = True
+    if args.ema_decay is not None:
+        cfg["training"]["ema_decay"] = args.ema_decay
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"[Train] Device: {device}")
+    print(f"[Train] Train CSV: {cfg['data']['train_csv']}")
+    print(f"[Train] Val CSV:   {cfg['data']['val_csv']}")
 
     # ── Datasets ──────────────────────────────────────────────────────────────
     train_ds = NEUDefectDataset(cfg["data"]["train_csv"], cfg["data"]["img_dir"],

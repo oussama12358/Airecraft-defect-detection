@@ -5,6 +5,8 @@ STD  = [0.229, 0.224, 0.225]
 
 
 def get_transforms(split: str):
+    split = split.lower()
+
     if split == "train":
         return T.Compose([
             T.Resize((224, 224)),
@@ -16,9 +18,15 @@ def get_transforms(split: str):
             T.RandomErasing(p=0.2),
             T.Normalize(MEAN, STD),
         ])
-    else:
+
+    if split in {"val", "validation", "test", "eval", "clean"}:
         return T.Compose([
             T.Resize((224, 224)),
             T.ToTensor(),
             T.Normalize(MEAN, STD),
         ])
+
+    raise ValueError(
+        f"Unknown split '{split}'. Use 'train' for augmentation or "
+        "'val'/'test' for clean evaluation."
+    )

@@ -60,8 +60,8 @@ def export(checkpoint: str, output: str, model_name: str, num_classes: int):
 
     pt_mb   = Path(checkpoint).stat().st_size / 1e6
     onnx_mb = Path(output).stat().st_size / 1e6
-    print(f"[ONNX] Saved → {output}")
-    print(f"[ONNX] PyTorch: {pt_mb:.1f} MB  →  ONNX: {onnx_mb:.1f} MB")
+    print(f"[ONNX] Saved -> {output}")
+    print(f"[ONNX] PyTorch: {pt_mb:.1f} MB -> ONNX: {onnx_mb:.1f} MB")
 
 
 def benchmark(onnx_path: str, runs: int = 100):

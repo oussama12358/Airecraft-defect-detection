@@ -1,0 +1,109 @@
+{
+  "model": "resnet50_fold_2",
+  "timestamp": "2026-05-10T16:52:57.504023",
+  "metrics": {
+    "accuracy": 0.9791666666666666,
+    "confusion_matrix": [
+      [
+        48,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        47,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        48,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        48,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        0,
+        43,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        48
+      ]
+    ],
+    "classification_report": {
+      "crazing": {
+        "precision": 0.9056603773584906,
+        "recall": 1.0,
+        "f1-score": 0.9504950495049505,
+        "support": 48.0
+      },
+      "inclusion": {
+        "precision": 1.0,
+        "recall": 0.9791666666666666,
+        "f1-score": 0.9894736842105263,
+        "support": 48.0
+      },
+      "patches": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 48.0
+      },
+      "pitted_surface": {
+        "precision": 0.9795918367346939,
+        "recall": 1.0,
+        "f1-score": 0.9896907216494846,
+        "support": 48.0
+      },
+      "rolled-in_scale": {
+        "precision": 1.0,
+        "recall": 0.8958333333333334,
+        "f1-score": 0.945054945054945,
+        "support": 48.0
+      },
+      "scratches": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 48.0
+      },
+      "accuracy": 0.9791666666666666,
+      "macro avg": {
+        "precision": 0.9808753690155307,
+        "recall": 0.9791666666666666,
+        "f1-score": 0.9791190667366511,
+        "support": 288.0
+      },
+      "weighted avg": {
+        "precision": 0.9808753690155307,
+        "recall": 0.9791666666666666,
+        "f1-score": 0.9791190667366512,
+        "support": 288.0
+      }
+    },
+    "test_csv": "data\\splits\\kfold\\fold_2\\test.csv"
+  }
+}

@@ -2,7 +2,8 @@
 
 ## Problem Statement
 
-The original ResNet50 model achieved **100% accuracy** on the test set but suffered from severe brittleness:
+The original ResNet50 model achieved **100% accuracy** on the clean test set but
+showed severe brittleness when evaluated with separate robustness probes:
 
 | Scenario | Accuracy |
 |----------|----------|
@@ -12,6 +13,15 @@ The original ResNet50 model achieved **100% accuracy** on the test set but suffe
 | Brightness changes | **18%** ❌ |
 
 **Root Cause:** Dataset too small (NEU-DET ~1,000 images) → overfitting → poor generalization.
+
+**Evaluation rule:** the official test set stays intact. Noise, blur, brightness
+and JPEG compression are applied in memory only for robustness analysis and are
+reported separately from the clean benchmark.
+
+```powershell
+python evaluate.py --checkpoint checkpoints/best_resnet50.pt
+python scripts/robustness_eval.py --mode single --model resnet50 --checkpoint checkpoints/best_resnet50.pt --split test
+```
 
 ---
 

@@ -1,0 +1,11 @@
+{
+  "run_name": "resnet50_fold_1",
+  "best_epoch": 30,
+  "best_val_acc": 0.9942196531791907,
+  "best_train_acc": 0.9908069458631257,
+  "best_acc_gap": -0.0034127073160650223,
+  "last_epoch": 30,
+  "last_train_acc": 0.9908069458631257,
+  "last_val_acc": 0.9942196531791907,
+  "last_acc_gap": -0.0034127073160650223
+}

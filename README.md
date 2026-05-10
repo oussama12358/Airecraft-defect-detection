@@ -46,6 +46,65 @@ The model classifies **6 types of surface defects**:
 
 ---
 
+## Evaluation Protocol
+
+The official validation and test evaluations use clean, unmodified images.
+Training augmentations are applied only to the training split.
+
+| Split | Purpose | Transform policy |
+|---|---|---|
+| `train` | Model fitting | resize + augmentation + normalization |
+| `val` | Model selection / early stopping | resize + normalization only |
+| `test` | Final benchmark | resize + normalization only |
+
+Robustness experiments are reported separately from the official test score.
+Noise, blur, brightness and JPEG compression probes are applied in memory only;
+they do not overwrite `data/splits/test.csv` or any image in `data/processed/images`.
+
+Clean benchmark:
+
+```powershell
+python evaluate.py --checkpoint checkpoints/best_resnet50.pt
+```
+
+Robustness probe on the clean test split:
+
+```powershell
+python scripts/robustness_eval.py --mode single --model resnet50 --checkpoint checkpoints/best_resnet50.pt --split test
+```
+
+Outputs are saved as separate robustness artifacts such as
+`reports/robustness_test_results.csv` and `reports/robustness_test_plot.png`.
+
+### K-Fold Variability Check
+
+K-fold is used to check whether the high accuracy is stable across several
+random train/test partitions instead of depending on one easy split.
+
+Create stratified folds:
+
+```powershell
+python scripts/prepare_kfold_splits.py --n_splits 5
+```
+
+Train and evaluate all folds for one model:
+
+```powershell
+python scripts/run_kfold.py --model resnet50
+```
+
+For a quick command preview without training:
+
+```powershell
+python scripts/run_kfold.py --model resnet50 --dry_run
+```
+
+Fold artifacts are saved as `checkpoints/best_resnet50_fold_*.pt`,
+`reports/resnet50_fold_*_report.json`, and
+`reports/kfold_summary_resnet50.csv`.
+
+---
+
 ---
 
 ## 🎓 Advanced Techniques
@@ -56,7 +115,7 @@ See [ADVANCED_ML_IMPROVEMENTS.md](ADVANCED_ML_IMPROVEMENTS.md) for the latest ad
 Verify your data is clean and augmentations are realistic:
 
 ```powershell
-python scripts/analyze_data.py --split train --visualize_augmentations
+python scripts/analyze_data.py --split train --visualize_augmentations --visualize_jpeg_artifacts
 ```
 
 **Checks:**
@@ -64,27 +123,26 @@ python scripts/analyze_data.py --split train --visualize_augmentations
 - ✅ Missing files and invalid annotations
 - ✅ Visual verification of augmentations
 - ✅ Annotation noise detection
+- Filename/label mismatch checks
+- JPEG artifact zoom checks
 
-**Output:** Class distribution plots + augmentation samples
+**Output:** Class distribution plots + augmentation samples + JPEG zoom samples
 
 ---
 
 ### 2. EMA (Exponential Moving Average)
 Stabilizes weight updates for better generalization:
 
-```python
-from src.training.ema import EMAScheduler
+```yaml
+training:
+  use_ema: true
+  ema_decay: 0.999
+```
 
-ema = EMAScheduler(model, decay=0.999)
-for epoch in range(num_epochs):
-    # Training step
-    loss.backward()
-    optimizer.step()
-    ema.update()  # Update EMA
-    
-    # Validate with EMA
-    with ema:
-        val_loss = evaluate(model, val_loader)
+Or for a single run:
+
+```powershell
+python train.py --model resnet50 --run_name resnet50_ema --use_ema --ema_decay 0.999
 ```
 
 **Benefits:** +0.5-1% accuracy, smoother convergence.
@@ -144,8 +202,24 @@ See [ROBUSTNESS_IMPROVEMENTS.md](ROBUSTNESS_IMPROVEMENTS.md) for detailed analys
 
 ## 📊 Results
 
+### Latest Run Summary (ResNet50)
+
+This section summarizes the latest reproducible artifacts under `reports/`.
+
+| Metric | Value | Artifact |
+|---|---:|---|
+| Clean test accuracy | 99.54% | `reports/resnet50_clean_v2_report.json` |
+| K-fold (5 folds) mean / std | 98.82% / 0.78% | `reports/kfold_summary_resnet50.csv` |
+| Robustness (gaussian_noise_high) | 17.51% | `reports/robustness_test_results.csv` |
+| Robustness (blur_heavy) | 63.59% | `reports/robustness_test_results.csv` |
+| Robustness (jpeg_quality_20) | 90.32% | `reports/robustness_test_results.csv` |
+
+Notes:
+- K-fold per-fold reports and curves are available under `reports/` (e.g. `reports/resnet50_fold_0_report.json` and `reports/training_curves_resnet50_fold_0.png`).
+- Robustness probes are separate from the official clean benchmark (in-memory perturbations only).
+
 ### Benchmark Performance
-- **Best model:** ResNet50 — 100% accuracy on NEU-DET test set
+- **Best model:** ResNet50 — ~99-100% accuracy on NEU-DET clean test set
 - **Evaluation metrics:** Confusion matrix + per-class accuracy
 - **Generalization:** Strong on clean data; fragile to perturbations
 
@@ -232,6 +306,8 @@ aircraft-defect-detection/
 │   ├── generate_predictions.py # Batch predictions on images
 │   ├── gradcam.py              # Generate Grad-CAM heatmaps
 │   ├── analyze_data.py         # Data analysis and augmentation visualization
+│   ├── prepare_kfold_splits.py # Create stratified K-fold CSV splits
+│   ├── run_kfold.py            # Train/evaluate across K-fold splits
 │   └── robustness_eval.py      # Robustness evaluation under perturbations
 │
 ├── src/                         # Source code
@@ -319,6 +395,10 @@ Then run:
 python train.py
 ```
 The best weights are saved to `checkpoints/best_{model_name}.pt`.
+Training curves and overfitting summaries are saved to:
+- `reports/training_history_{model_name}.csv`
+- `reports/training_summary_{model_name}.json`
+- `reports/training_curves_{model_name}.png`
 
 ### 8. Evaluate a model
 ```powershell

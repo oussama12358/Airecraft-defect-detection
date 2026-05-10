@@ -1,0 +1,109 @@
+{
+  "model": "resnet50_clean_v2",
+  "timestamp": "2026-05-10T12:57:22.344219",
+  "metrics": {
+    "accuracy": 0.9953917050691244,
+    "confusion_matrix": [
+      [
+        36,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        36,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        35,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        37,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        36,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        36
+      ]
+    ],
+    "classification_report": {
+      "crazing": {
+        "precision": 0.972972972972973,
+        "recall": 1.0,
+        "f1-score": 0.9863013698630136,
+        "support": 36.0
+      },
+      "inclusion": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 36.0
+      },
+      "patches": {
+        "precision": 1.0,
+        "recall": 0.9722222222222222,
+        "f1-score": 0.9859154929577465,
+        "support": 36.0
+      },
+      "pitted_surface": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 37.0
+      },
+      "rolled-in_scale": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 36.0
+      },
+      "scratches": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 36.0
+      },
+      "accuracy": 0.9953917050691244,
+      "macro avg": {
+        "precision": 0.9954954954954954,
+        "recall": 0.9953703703703703,
+        "f1-score": 0.9953694771367934,
+        "support": 217.0
+      },
+      "weighted avg": {
+        "precision": 0.9955162535807698,
+        "recall": 0.9953917050691244,
+        "f1-score": 0.9953908159518311,
+        "support": 217.0
+      }
+    },
+    "test_csv": "data/splits/test.csv"
+  }
+}

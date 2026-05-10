@@ -13,4 +13,4 @@ def save_report(metrics: dict, model_name: str, reports_dir: str = "reports"):
     path = f"{reports_dir}/{model_name}_report.json"
     with open(path, "w") as f:
         json.dump(report, f, indent=2)
-    print(f"[Report] Saved → {path}")
+    print(f"[Report] Saved -> {path}")

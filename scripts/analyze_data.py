@@ -2,109 +2,136 @@ import argparse
 import sys
 from pathlib import Path
 
-# Add project root to path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.datasets.data_analyzer import DataAnalyzer, AugmentationVisualizer
 
 
-def main():
+def analyze_split(split: str, args) -> None:
+    csv_path = f"data/splits/{split}.csv"
+    img_dir = "data/processed/images"
+
+    print("\n" + "=" * 70)
+    print(f"DATA ANALYSIS - {split.upper()} SPLIT")
+    print("=" * 70)
+
+    analyzer = DataAnalyzer(csv_path, img_dir)
+
+    print("\n1. CHECKING DATA BALANCE...")
+    analyzer.check_data_balance()
+    analyzer.plot_data_balance(
+        output_dir=args.output_dir,
+        output_name=f"data_balance_{split}.png",
+    )
+
+    print("\n2. CHECKING ANNOTATION QUALITY...")
+    issues = analyzer.check_annotation_quality()
+
+    if args.visualize_augmentations or args.visualize_jpeg_artifacts:
+        visualizer = AugmentationVisualizer(img_dir)
+        sample_files = analyzer.df.sample(
+            min(args.sample_size, len(analyzer.df)),
+            random_state=args.seed,
+        )["filename"].tolist()
+
+        if args.visualize_augmentations:
+            print(f"\n3. VISUALIZING AUGMENTATIONS ({len(sample_files)} samples)...")
+            img_paths = []
+            for i, filename in enumerate(sample_files, 1):
+                img_path = Path(img_dir) / filename
+                if img_path.exists():
+                    print(f"   [{i}/{len(sample_files)}] {filename}")
+                    visualizer.visualize_augmentations(str(img_path), output_dir=args.output_dir)
+                    img_paths.append(str(img_path))
+
+            if img_paths:
+                print("   Creating batch visualization...")
+                visualizer.visualize_batch(img_paths, output_dir=args.output_dir)
+
+        if args.visualize_jpeg_artifacts:
+            print(f"\n4. VISUALIZING JPEG ZOOM CHECKS ({len(sample_files)} samples)...")
+            for i, filename in enumerate(sample_files, 1):
+                img_path = Path(img_dir) / filename
+                if img_path.exists():
+                    print(f"   [{i}/{len(sample_files)}] {filename}")
+                    visualizer.visualize_jpeg_zoom(str(img_path), output_dir=args.output_dir)
+
+    print("\n" + "=" * 70)
+    print("SUMMARY")
+    print("=" * 70)
+    print(f"Split: {split}")
+    print(f"Total samples: {len(analyzer.df)}")
+    print(f"Missing files: {len(issues['missing_files'])}")
+    print(f"Unreadable images: {len(issues['unreadable_images'])}")
+    print(f"Invalid classes: {len(issues['invalid_classes'])}")
+    print(f"Duplicates: {len(issues['duplicates'])}")
+    print(f"Filename/label mismatches: {len(issues['filename_label_mismatch'])}")
+    print(f"Very small images: {len(issues['small_images'])}")
+    print(f"Output saved to: {args.output_dir}")
+    print("=" * 70 + "\n")
+
+    if any(issues.values()):
+        print("RECOMMENDATIONS:")
+        if issues["missing_files"]:
+            print(f"   - Restore or remove {len(issues['missing_files'])} missing files")
+        if issues["unreadable_images"]:
+            print(f"   - Re-export {len(issues['unreadable_images'])} unreadable images")
+        if issues["invalid_classes"]:
+            print(f"   - Check {len(issues['invalid_classes'])} invalid labels")
+        if issues["duplicates"]:
+            print(f"   - Review {len(issues['duplicates'])} duplicate rows")
+        if issues["filename_label_mismatch"]:
+            print(f"   - Manually inspect {len(issues['filename_label_mismatch'])} label mismatches")
+        if issues["small_images"]:
+            print(f"   - Verify {len(issues['small_images'])} very small images")
+    else:
+        print("DATA LOOKS CLEAN!")
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Analyze dataset balance and visualize augmentations"
+        description="Analyze dataset balance, labels, augmentations and JPEG artifacts"
     )
     parser.add_argument(
         "--split",
-        choices=["train", "val", "test"],
+        choices=["train", "val", "test", "all"],
         default="train",
-        help="Which split to analyze"
+        help="Which split to analyze",
     )
     parser.add_argument(
         "--output_dir",
         type=str,
         default="reports",
-        help="Output directory for visualizations"
+        help="Output directory for visualizations",
     )
     parser.add_argument(
         "--visualize_augmentations",
         action="store_true",
-        help="Create augmentation visualizations"
+        help="Create augmentation visualizations",
+    )
+    parser.add_argument(
+        "--visualize_jpeg_artifacts",
+        action="store_true",
+        help="Create zoomed crops to inspect JPEG artifacts",
     )
     parser.add_argument(
         "--sample_size",
         type=int,
         default=6,
-        help="Number of samples to visualize"
+        help="Number of samples to visualize",
     )
-    
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for visual samples",
+    )
     args = parser.parse_args()
-    
-    csv_path = f"data/splits/{args.split}.csv"
-    img_dir = "data/processed/images"
-    
-    print("\n" + "="*70)
-    print(f"📊 DATA ANALYSIS - {args.split.upper()} SPLIT")
-    print("="*70)
-    
-    # Initialize analyzer
-    analyzer = DataAnalyzer(csv_path, img_dir)
-    
-    # Step 1: Check balance
-    print("\n1️⃣  CHECKING DATA BALANCE...")
-    balance = analyzer.check_data_balance()
-    analyzer.plot_data_balance(output_dir=args.output_dir)
-    
-    # Step 2: Check annotation quality
-    print("\n2️⃣  CHECKING ANNOTATION QUALITY...")
-    issues = analyzer.check_annotation_quality()
-    
-    # Step 3: Visualize augmentations
-    if args.visualize_augmentations:
-        print(f"\n3️⃣  VISUALIZING AUGMENTATIONS ({args.sample_size} samples)...")
-        visualizer = AugmentationVisualizer(img_dir)
-        
-        # Get sample images
-        df = analyzer.df
-        sample_files = df.sample(min(args.sample_size, len(df)))["filename"].tolist()
-        
-        for i, filename in enumerate(sample_files, 1):
-            img_path = Path(img_dir) / filename
-            if img_path.exists():
-                print(f"   [{i}/{len(sample_files)}] {filename}")
-                visualizer.visualize_augmentations(str(img_path), output_dir=args.output_dir)
-        
-        # Batch visualization
-        if sample_files:
-            print(f"   Creating batch visualization...")
-            img_paths = [str(Path(img_dir) / f) for f in sample_files if (Path(img_dir) / f).exists()]
-            if img_paths:
-                visualizer.visualize_batch(img_paths, output_dir=args.output_dir)
-    
-    # Summary
-    print("\n" + "="*70)
-    print("📋 SUMMARY")
-    print("="*70)
-    print(f"✅ Split: {args.split}")
-    print(f"✅ Total samples: {len(analyzer.df)}")
-    print(f"✅ Missing files: {len(issues['missing_files'])}")
-    print(f"✅ Invalid classes: {len(issues['invalid_classes'])}")
-    print(f"✅ Duplicates: {len(issues['duplicates'])}")
-    print(f"✅ Output saved to: {args.output_dir}")
-    print("="*70 + "\n")
-    
-    # Recommendations
-    if issues['missing_files'] or issues['invalid_classes'] or issues['duplicates']:
-        print("⚠️  RECOMMENDATIONS:")
-        if issues['missing_files']:
-            print(f"   - Remove {len(issues['missing_files'])} rows with missing files")
-        if issues['invalid_classes']:
-            print(f"   - Check {len(issues['invalid_classes'])} rows with invalid classes")
-        if issues['duplicates']:
-            print(f"   - Remove {len(issues['duplicates'])} duplicate entries")
-    else:
-        print("✅ DATA LOOKS CLEAN!")
-    
-    print()
+
+    splits = ["train", "val", "test"] if args.split == "all" else [args.split]
+    for split in splits:
+        analyze_split(split, args)
 
 
 if __name__ == "__main__":

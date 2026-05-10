@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import torchvision.transforms as T
 import torchvision.transforms.functional as TF
 from PIL import Image
-from torch.utils.data import DataLoader
 from pathlib import Path
 
 CLASS_NAMES = [
@@ -13,11 +12,14 @@ CLASS_NAMES = [
     "pitted_surface", "rolled-in_scale", "scratches",
 ]
 
+MEAN = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)
+STD = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)
+
 
 # ── Perturbation functions ────────────────────────────────────────────────────
 
 def add_gaussian_noise(img: torch.Tensor, std: float) -> torch.Tensor:
-    """Add Gaussian noise to a normalized tensor."""
+    """Add Gaussian noise to an image-space tensor in [0, 1]."""
     return (img + torch.randn_like(img) * std).clamp(0, 1)
 
 
@@ -42,6 +44,32 @@ def add_jpeg_compression(img: torch.Tensor, quality: int) -> torch.Tensor:
     return TF.to_tensor(Image.open(buf))
 
 
+def _denormalize(img: torch.Tensor) -> torch.Tensor:
+    """Convert an ImageNet-normalized tensor back to image space [0, 1]."""
+    return (img.cpu() * STD + MEAN).clamp(0, 1)
+
+
+def _normalize(img: torch.Tensor) -> torch.Tensor:
+    """Convert an image-space tensor [0, 1] to ImageNet normalization."""
+    return (img.cpu() - MEAN) / STD
+
+
+def apply_in_memory_perturbation(
+    img: torch.Tensor,
+    perturbation_fn,
+    inputs_are_normalized: bool = True,
+) -> torch.Tensor:
+    """
+    Apply a robustness perturbation without changing the stored test image.
+
+    Noise, blur, brightness and JPEG compression are image-space operations.
+    The model still receives normalized tensors after the temporary probe.
+    """
+    image_space = _denormalize(img) if inputs_are_normalized else img.cpu().clamp(0, 1)
+    perturbed = perturbation_fn(image_space).clamp(0, 1)
+    return _normalize(perturbed) if inputs_are_normalized else perturbed
+
+
 # ── Perturbation configs ──────────────────────────────────────────────────────
 
 PERTURBATIONS = {
@@ -60,7 +88,13 @@ PERTURBATIONS = {
 # ── Core evaluation ───────────────────────────────────────────────────────────
 
 @torch.no_grad()
-def evaluate_with_perturbation(model, loader, device, perturbation_fn=None):
+def evaluate_with_perturbation(
+    model,
+    loader,
+    device,
+    perturbation_fn=None,
+    inputs_are_normalized: bool = True,
+):
     """Evaluate model accuracy with optional perturbation applied."""
     model.eval()
     correct, total = 0, 0
@@ -68,7 +102,14 @@ def evaluate_with_perturbation(model, loader, device, perturbation_fn=None):
     for imgs, labels in loader:
         imgs = imgs.to(device)
         if perturbation_fn is not None:
-            imgs = torch.stack([perturbation_fn(img.cpu()) for img in imgs]).to(device)
+            imgs = torch.stack([
+                apply_in_memory_perturbation(
+                    img.cpu(),
+                    perturbation_fn,
+                    inputs_are_normalized=inputs_are_normalized,
+                )
+                for img in imgs
+            ]).to(device)
         preds = model(imgs).argmax(1)
         correct += (preds == labels.to(device)).sum().item()
         total   += labels.size(0)
@@ -81,6 +122,7 @@ def run_robustness_evaluation(
     loader,
     device:      str  = "cpu",
     reports_dir: str  = "reports",
+    run_name:    str  = "robustness",
 ) -> pd.DataFrame:
     """
     Run full robustness evaluation across all perturbations.
@@ -88,17 +130,23 @@ def run_robustness_evaluation(
     """
     Path(reports_dir).mkdir(parents=True, exist_ok=True)
 
-    print("[Robustness] Evaluating clean accuracy...")
+    print("[Robustness] Evaluating clean accuracy on the unmodified split...")
     clean_acc = evaluate_with_perturbation(model, loader, device)
     print(f"  Clean accuracy: {clean_acc*100:.2f}%")
 
-    results = [{"perturbation": "clean", "accuracy": clean_acc, "drop": 0.0}]
+    results = [{
+        "protocol": "clean_eval",
+        "perturbation": "clean",
+        "accuracy": clean_acc,
+        "drop": 0.0,
+    }]
 
     for name, fn in PERTURBATIONS.items():
-        print(f"[Robustness] Testing: {name}...")
+        print(f"[Robustness] Testing in-memory perturbation: {name}...")
         acc  = evaluate_with_perturbation(model, loader, device, fn)
         drop = clean_acc - acc
         results.append({
+            "protocol":     "in_memory_robustness_probe",
             "perturbation": name,
             "accuracy":     acc,
             "drop":         drop,
@@ -108,17 +156,17 @@ def run_robustness_evaluation(
     df = pd.DataFrame(results)
 
     # ── Save CSV ──────────────────────────────────────────────────────────────
-    csv_path = f"{reports_dir}/robustness_results.csv"
+    csv_path = str(Path(reports_dir) / f"{run_name}_results.csv")
     df.to_csv(csv_path, index=False)
-    print(f"\n[Robustness] Results saved → {csv_path}")
+    print(f"\n[Robustness] Results saved -> {csv_path}")
 
     # ── Plot ──────────────────────────────────────────────────────────────────
-    _plot_robustness(df, reports_dir)
+    _plot_robustness(df, reports_dir, run_name)
 
     return df
 
 
-def _plot_robustness(df: pd.DataFrame, reports_dir: str):
+def _plot_robustness(df: pd.DataFrame, reports_dir: str, run_name: str = "robustness"):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
     colors = ["green" if r["perturbation"] == "clean"
@@ -147,10 +195,10 @@ def _plot_robustness(df: pd.DataFrame, reports_dir: str):
     ax2.legend()
 
     plt.tight_layout()
-    path = f"{reports_dir}/robustness_plot.png"
+    path = str(Path(reports_dir) / f"{run_name}_plot.png")
     plt.savefig(path, dpi=150, bbox_inches="tight")
     plt.close()
-    print(f"[Robustness] Plot saved → {path}")
+    print(f"[Robustness] Plot saved -> {path}")
 
 
 def compare_models_robustness(
@@ -158,6 +206,7 @@ def compare_models_robustness(
     loader,
     device:      str = "cpu",
     reports_dir: str = "reports",
+    run_name:    str = "robustness",
 ) -> pd.DataFrame:
     """
     Compare robustness across multiple models.
@@ -202,10 +251,10 @@ def compare_models_robustness(
     plt.title("Model Robustness Comparison (Accuracy %)")
     plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
-    path = f"{reports_dir}/robustness_comparison.png"
+    path = str(Path(reports_dir) / f"{run_name}_comparison.png")
     plt.savefig(path, dpi=150)
     plt.close()
-    print(f"\n[Robustness] Comparison heatmap saved → {path}")
+    print(f"\n[Robustness] Comparison heatmap saved -> {path}")
 
-    df.to_csv(f"{reports_dir}/robustness_comparison.csv", index=False)
+    df.to_csv(Path(reports_dir) / f"{run_name}_comparison.csv", index=False)
     return df

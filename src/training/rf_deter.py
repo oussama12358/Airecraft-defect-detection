@@ -215,13 +215,13 @@ if __name__ == "__main__":
     out1 = model(x)
     out2 = model(x)
     
-    print(f"✅ Model output shape: {out1.shape}")
-    print(f"✅ Training outputs differ (due to perturbation): {not torch.allclose(out1, out2)}")
+    print(f"Model output shape: {out1.shape}")
+    print(f"Training outputs differ (due to perturbation): {not torch.allclose(out1, out2)}")
     
     # Eval mode (no perturbation)
     model.eval()
     out3 = model(x)
     out4 = model(x)
     
-    print(f"✅ Eval outputs are identical: {torch.allclose(out3, out4)}")
-    print(f"✅ RF-DETER working correctly!")
+    print(f"Eval outputs are identical: {torch.allclose(out3, out4)}")
+    print("RF-DETER working correctly!")

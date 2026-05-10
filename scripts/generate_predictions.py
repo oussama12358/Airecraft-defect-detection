@@ -163,4 +163,4 @@ for path in image_paths:
 
     cv2.imwrite(os.path.join(OUTPUT_DIR, f"pred_{filename}"), img)
 
-print("✅ Predictions completed successfully!")
+print("Predictions completed successfully!")

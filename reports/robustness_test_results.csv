@@ -1,0 +1,11 @@
+protocol,perturbation,accuracy,drop
+clean_eval,clean,0.9953917050691244,0.0
+in_memory_robustness_probe,gaussian_noise_low,0.1889400921658986,0.8064516129032259
+in_memory_robustness_probe,gaussian_noise_medium,0.25806451612903225,0.7373271889400922
+in_memory_robustness_probe,gaussian_noise_high,0.17511520737327188,0.8202764976958525
+in_memory_robustness_probe,blur_light,0.9078341013824884,0.08755760368663601
+in_memory_robustness_probe,blur_heavy,0.6359447004608295,0.35944700460829493
+in_memory_robustness_probe,brightness_dark,0.9032258064516129,0.09216589861751157
+in_memory_robustness_probe,brightness_bright,0.8110599078341014,0.18433179723502302
+in_memory_robustness_probe,jpeg_quality_50,0.9400921658986175,0.055299539170506895
+in_memory_robustness_probe,jpeg_quality_20,0.9032258064516129,0.09216589861751157

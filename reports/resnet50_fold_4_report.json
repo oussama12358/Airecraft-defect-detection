@@ -1,0 +1,109 @@
+{
+  "model": "resnet50_fold_4",
+  "timestamp": "2026-05-10T20:27:58.315551",
+  "metrics": {
+    "accuracy": 0.9791666666666666,
+    "confusion_matrix": [
+      [
+        48,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        48,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        46,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        48,
+        0,
+        0
+      ],
+      [
+        4,
+        0,
+        0,
+        0,
+        44,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        48
+      ]
+    ],
+    "classification_report": {
+      "crazing": {
+        "precision": 0.8888888888888888,
+        "recall": 1.0,
+        "f1-score": 0.9411764705882353,
+        "support": 48.0
+      },
+      "inclusion": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 48.0
+      },
+      "patches": {
+        "precision": 1.0,
+        "recall": 0.9583333333333334,
+        "f1-score": 0.9787234042553191,
+        "support": 48.0
+      },
+      "pitted_surface": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 48.0
+      },
+      "rolled-in_scale": {
+        "precision": 1.0,
+        "recall": 0.9166666666666666,
+        "f1-score": 0.9565217391304348,
+        "support": 48.0
+      },
+      "scratches": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 48.0
+      },
+      "accuracy": 0.9791666666666666,
+      "macro avg": {
+        "precision": 0.9814814814814815,
+        "recall": 0.9791666666666666,
+        "f1-score": 0.9794036023289983,
+        "support": 288.0
+      },
+      "weighted avg": {
+        "precision": 0.9814814814814814,
+        "recall": 0.9791666666666666,
+        "f1-score": 0.9794036023289981,
+        "support": 288.0
+      }
+    },
+    "test_csv": "data\\splits\\kfold\\fold_4\\test.csv"
+  }
+}

@@ -1,6 +1,6 @@
-# ✈️ Aircraft Defect Detection using Deep Learning
+# 🔧 Steel Surface Defect Detection using Deep Learning
 
-> A deep learning system for automatic detection of surface defects in aircraft and industrial materials using image classification models trained on the **NEU-DET** dataset.
+> A deep learning system for automatic detection of surface defects in steel and industrial materials using image classification models trained on the **NEU-DET** dataset.
 
 ---
 
@@ -25,7 +25,7 @@
 
 This project focuses on **detecting and classifying surface defects** in steel and industrial materials using multiple deep learning architectures. The system supports end-to-end inference: from raw image input to annotated predictions with confidence scores.
 
-The pipeline is designed for real-world deployment in aerospace and industrial quality control contexts.
+The pipeline is designed for real-world deployment in industrial quality control contexts.
 
 ---
 
@@ -252,7 +252,7 @@ Model performance degrades significantly under real-world conditions:
 ## 📁 Project Structure
 
 ```
-aircraft-defect-detection/
+steel-surface-defect-detection/
 │
 ├── api/                         # FastAPI application
 │   ├── __init__.py

@@ -14,7 +14,7 @@ from src.models.efficientnet_b3 import build_efficientnet_b3
 from omegaconf import OmegaConf
 
 app = FastAPI(
-    title="Aircraft Defect Detection API (Enhanced)",
+    title="Steel Surface Defect Detection API (Enhanced)",
     description="Classifies surface defects using Ensemble + Robust TTA + Grad-CAM",
     version="2.0.0",
 )
@@ -74,7 +74,7 @@ async def startup():
 @app.get("/")
 def root():
     return JSONResponse({
-        "message": "Aircraft Defect Detection API (Enhanced)",
+        "message": "Steel Surface Defect Detection API (Enhanced)",
         "endpoints": {
             "/predict": "Single model + basic TTA (fast)",
             "/predict/ensemble": "3-model ensemble (balanced)",

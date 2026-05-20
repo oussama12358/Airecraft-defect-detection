@@ -26,8 +26,7 @@ model.onnx.data
 /checkpoints/
 /data/processed/
 /data/raw/
-/api/assets/results/
-/assets/results/
+/api/
 # Logs
 *.log
 

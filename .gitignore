@@ -27,7 +27,7 @@ model.onnx.data
 /data/processed/
 /data/raw/
 /api/assets/results/
-
+/assets/results/
 # Logs
 *.log
 

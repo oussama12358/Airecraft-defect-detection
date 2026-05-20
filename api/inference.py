@@ -21,12 +21,35 @@ TRANSFORM = T.Compose([
 cfg = OmegaConf.to_container(OmegaConf.load("configs/config.yaml"), resolve=True)
 
 
+def checkpoint_uses_lora(state_dict: dict) -> bool:
+    return any(
+        key.endswith(".lora_A") or key.endswith(".lora_B")
+        for key in state_dict.keys()
+    )
+
+
 def load_model(checkpoint_path: str, num_classes: int = 6):
     model = build_efficientnet_b3(num_classes)
-    if cfg["training"].get("use_lora", False):
+    state_dict = torch.load(checkpoint_path, map_location="cpu")
+
+    if checkpoint_uses_lora(state_dict):
         from src.training.lora import apply_lora
-        model = apply_lora(model, r=cfg["training"]["lora_rank"], alpha=cfg["training"]["lora_alpha"], dropout=cfg["training"]["lora_dropout"], target_modules=cfg["training"].get("lora_target_modules", ["fc", "classifier"]))
-    model.load_state_dict(torch.load(checkpoint_path, map_location="cpu"))
+        model = apply_lora(
+            model,
+            r=cfg["training"]["lora_rank"],
+            alpha=cfg["training"]["lora_alpha"],
+            dropout=cfg["training"]["lora_dropout"],
+            target_modules=cfg["training"].get("lora_target_modules", ["fc", "classifier"]),
+        )
+
+    try:
+        model.load_state_dict(state_dict)
+    except RuntimeError as exc:
+        if "Missing key(s)" in str(exc) or "Unexpected key(s)" in str(exc):
+            model.load_state_dict(state_dict, strict=False)
+        else:
+            raise
+
     model.eval()
     return model
 

@@ -1,18 +1,19 @@
 import sys
 from pathlib import Path
+import argparse
+import torch
+from omegaconf import OmegaConf
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-import torch, argparse
-from omegaconf import OmegaConf
-from src.models.efficientnet_b3 import build_efficientnet_b3
-from src.models.resnet50     import build_resnet50
-from src.models.baseline_cnn import BaselineCNN
-from src.training.lora import apply_lora
-
 
 def export(checkpoint: str, output: str, model_name: str, num_classes: int):
+    from src.models.efficientnet_b3 import build_efficientnet_b3
+    from src.models.resnet50 import build_resnet50
+    from src.models.baseline_cnn import BaselineCNN
+    from src.training.lora import apply_lora
+
     print(f"[ONNX] Loading {model_name}...")
 
     if model_name == "efficientnet_b3":
@@ -65,16 +66,20 @@ def export(checkpoint: str, output: str, model_name: str, num_classes: int):
 
 
 def benchmark(onnx_path: str, runs: int = 100):
-    import onnxruntime as ort, numpy as np, time
+    import onnxruntime as ort
+    import numpy as np
+    import time
 
     sess  = ort.InferenceSession(onnx_path)
     dummy = np.random.randn(1, 3, 224, 224).astype(np.float32)
     name  = sess.get_inputs()[0].name
 
-    for _ in range(10): sess.run(None, {name: dummy})
+    for _ in range(10):
+        sess.run(None, {name: dummy})
 
     t = time.perf_counter()
-    for _ in range(runs): sess.run(None, {name: dummy})
+    for _ in range(runs):
+        sess.run(None, {name: dummy})
     ms = (time.perf_counter() - t) / runs * 1000
     print(f"[ONNX] Avg latency ({runs} runs): {ms:.2f} ms")
 

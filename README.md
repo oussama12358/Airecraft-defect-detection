@@ -365,7 +365,6 @@ cd "defect-detection"
 python -m venv .venv_new
 .venv_new\Scripts\Activate.ps1
 ```
-
 ### 4. Install dependencies
 ```powershell
 pip install -r requirements.txt

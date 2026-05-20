@@ -1,24 +1,23 @@
+import os
+import sys
 import streamlit as st
 import torch
 import numpy as np
 from PIL import Image
-import io
-import sys
-import os
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import cv2
-
-# Add project root to path
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-if ROOT_DIR not in sys.path:
-    sys.path.append(ROOT_DIR)
 
 from src.models.baseline_cnn import BaselineCNN
 from src.models.resnet50 import build_resnet50
 from src.models.efficientnet_b3 import build_efficientnet_b3
 from src.explainability.gradcam import GradCAM
 from omegaconf import OmegaConf
+
+# Add project root to path
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
 
 # Page config
 st.set_page_config(
@@ -115,7 +114,7 @@ def generate_gradcam(image, model, predicted_class):
         image_tensor = transform(image).unsqueeze(0).to(DEVICE)
         
         with torch.no_grad():
-            outputs = model(image_tensor)
+            model(image_tensor)
         
         heatmap = gradcam.generate_cam(image_tensor, predicted_class)
         heatmap = cv2.resize(heatmap, (224, 224))

@@ -4,8 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from pathlib import Path
-from collections import Counter
-import cv2
 from PIL import Image
 from torchvision import transforms as T
 import torch
@@ -233,7 +231,7 @@ class AugmentationVisualizer:
         """Visualize multiple images with augmentations."""
         os.makedirs(output_dir, exist_ok=True)
         
-        fig = plt.figure(figsize=(18, 12))
+        plt.figure(figsize=(18, 12))
         
         for batch_idx, img_path in enumerate(img_paths[:6]):  # Max 6 images
             if not os.path.exists(img_path):

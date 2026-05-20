@@ -31,4 +31,4 @@ class NEUDefectDataset(Dataset):
 
     def get_labels(self):
         """Returns all labels as integers (used by sampler)."""
-        return [self.class_to_idx[l] for l in self.df["label"]]
+        return [self.class_to_idx[label] for label in self.df["label"]]

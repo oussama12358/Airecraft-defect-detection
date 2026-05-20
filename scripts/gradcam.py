@@ -8,14 +8,14 @@ from omegaconf import OmegaConf
 from torchvision import transforms
 from PIL import Image
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if ROOT_DIR not in sys.path:
-    sys.path.append(ROOT_DIR)
-
 from src.models.baseline_cnn import BaselineCNN
 from src.models.resnet50 import build_resnet50
 from src.models.efficientnet_b3 import build_efficientnet_b3
 from src.training.lora import apply_lora
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", required=True)

@@ -1,19 +1,19 @@
 import sys
 from pathlib import Path
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
 import torch
 import argparse
 from torch.utils.data import DataLoader
 from omegaconf import OmegaConf
+
 from src.datasets.neu_dataset     import NEUDefectDataset
 from src.datasets.transforms      import get_transforms
 from src.models.resnet50          import build_resnet50
 from src.models.efficientnet_b3      import build_efficientnet_b3
 from src.models.baseline_cnn      import BaselineCNN
 from src.evaluation.robustness    import run_robustness_evaluation, compare_models_robustness
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 def load_model(name: str, checkpoint: str, cfg: dict, num_classes: int = 6):
     if name == "resnet50":

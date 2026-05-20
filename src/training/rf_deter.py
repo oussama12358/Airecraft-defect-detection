@@ -6,7 +6,6 @@ Especially useful for small datasets with potential annotation noise.
 
 import torch
 import torch.nn as nn
-from typing import Callable, Optional
 
 
 class RFDeterMixin:

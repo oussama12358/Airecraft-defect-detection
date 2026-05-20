@@ -6,10 +6,9 @@ Combines multiple models and TTA augmentations for production-grade predictions.
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
-import torchvision.transforms.functional as TF
 import numpy as np
 from PIL import Image
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 CLASS_NAMES = [
     "crazing", "inclusion", "patches",

@@ -1,11 +1,10 @@
 import argparse
 import sys
 from pathlib import Path
+from src.datasets.data_analyzer import DataAnalyzer, AugmentationVisualizer
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-
-from src.datasets.data_analyzer import DataAnalyzer, AugmentationVisualizer
 
 
 def analyze_split(split: str, args) -> None:

@@ -20,7 +20,7 @@ def build_weighted_sampler(csv_path: str) -> WeightedRandomSampler:
 
     class_weights  = {c: 1.0 / counts[c] for c in counts}
     sample_weights = torch.tensor(
-        [class_weights[l] for l in labels], dtype=torch.float
+        [class_weights[label] for label in labels], dtype=torch.float
     )
 
     return WeightedRandomSampler(
